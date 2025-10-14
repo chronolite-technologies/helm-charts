@@ -1,0 +1,17 @@
+name: Update Registry Index
+
+on:
+  repository_dispatch:
+    types: [chart-published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    uses: chronolite-technologies/helm-workflows/.github/workflows/update-registry.yml@main
+    with:
+      chart-name: ${{ github.event.client_payload.chart }}
+      chart-version: ${{ github.event.client_payload.version }}
+      oci-url: ${{ github.event.client_payload.oci_url }}

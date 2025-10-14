@@ -1,0 +1,30 @@
+Chronolite Helm Charts Registry
+Copyright 2025 Chronolite Technologies
+
+This repository contains Helm charts and registry infrastructure for deploying
+Chronolite Technologies' edge infrastructure components.
+
+---
+
+THIRD PARTY COMPONENTS
+
+This registry distributes Helm charts that are based on or derived from third-party
+open-source projects. Each chart maintains attribution to its original authors and
+preserves the original license.
+
+Individual chart repositories contain specific attribution and licensing information.
+Please refer to the LICENSE and NOTICE files in each chart repository for details.
+
+---
+
+REGISTRY INFRASTRUCTURE
+
+The registry infrastructure (GitHub Actions workflows, documentation, and automation
+scripts) is original work by Chronolite Technologies and is licensed under the
+Apache License 2.0.
+
+---
+
+For questions or concerns about licensing and attribution, contact:
+- Email: emil.schilberg@chronolite.tech
+- LinkedIn: https://www.linkedin.com/in/emil-schilberg-604707210/
