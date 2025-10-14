@@ -15,3 +15,4 @@ jobs:
       chart-name: ${{ github.event.client_payload.chart }}
       chart-version: ${{ github.event.client_payload.version }}
       oci-url: ${{ github.event.client_payload.oci_url }}
+    secrets: inherit
