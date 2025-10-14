@@ -1,0 +1,22 @@
+# Helm
+*.tgz.prov
+.helm/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Test outputs
+test-output/
+coverage/
