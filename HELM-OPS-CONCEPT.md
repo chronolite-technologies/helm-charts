@@ -1,7 +1,7 @@
 # Chronolite Helm Charts - Operations Concept
 
-**Version:** 1.0  
-**Last Updated:** October 2025  
+**Version:** 2.0  
+**Last Updated:** October 14, 2025  
 **Maintainer:** Chronolite Technologies
 
 ---
@@ -9,6 +9,8 @@
 ## Overview
 
 Distributed Helm chart development model with centralized registry, automated upstream synchronization, security scanning, and image replication for air-gapped deployments.
+
+This document describes the operational model implemented by the [helm-workflows](https://github.com/chronolite-technologies/helm-workflows) reusable workflows repository.
 
 ## Architecture
 
@@ -92,136 +94,158 @@ chart-keycloak/
 
 ## Core Workflows
 
-### 1. Upstream Synchronization
+All workflows are provided as reusable workflows in [helm-workflows](https://github.com/chronolite-technologies/helm-workflows) repository.
+
+### 1. Upstream Synchronization (`sync-upstream.yml`)
 
 **Purpose:** Keep charts aligned with official upstream sources
 
+**Implementation:**
+- Single job with automatic change detection
+- No separate secrets required (uses `GITHUB_TOKEN`)
+- Combines submodule update and sync script execution
+- Automatic PR creation with change detection
+
 **Process:**
-```
+
+```text
 ┌─────────────┐
-│   Trigger   │ (Weekly cron OR manual OR submodule update)
+│   Trigger   │ (Schedule OR manual)
 └──────┬──────┘
        │
        ▼
 ┌─────────────────────┐
-│ Update Submodule    │ git submodule update --remote
+│ Update Submodule    │ • Fetch latest upstream tag
+│ & Run sync.sh       │ • Execute sync script
+│                     │ • Extract/templatize manifests
 └──────┬──────────────┘
        │
        ▼
 ┌─────────────────────┐
-│  Run sync.sh        │ • Extract CRDs, manifests
-│                     │ • Templatize with Helm values
-│                     │ • Update Chart.yaml version
-└──────┬──────────────┘
-       │
-       ▼
-┌─────────────────────┐
-│  Create PR          │ Auto-PR for review
+│  Create PR          │ Auto-creates PR if changes detected
 └─────────────────────┘
 ```
 
-**Sync Script Logic:**
-1. Fetch latest upstream tag/commit
-2. Extract relevant manifests (CRDs, deployments, etc.)
-3. Convert to Helm templates with `{{ .Values }}` placeholders
-4. Add conditional `{{- if .Values.component.enabled }}`
-5. Update Chart.yaml with upstream version
+**Configuration:**
 
-### 2. Security Scanning
+```yaml
+jobs:
+  sync:
+    uses: chronolite-technologies/helm-workflows/.github/workflows/sync-upstream.yml@main
+    with:
+      upstream-path: upstream/source    # Path to git submodule
+      chart-path: charts/chart-name     # Path to chart directory
+      sync-script: scripts/sync.sh      # Optional, default shown
+```
+
+### 2. Security Scanning (`scan-images.yml`)
 
 **Purpose:** Continuous vulnerability monitoring of all container images
 
+**Implementation:**
+- Single job (no matrix overhead)
+- Inline image parsing from `.images.yaml`
+- Unified severity threshold configuration
+- Automatic SARIF upload to GitHub Security tab
+
 **Process:**
-```
+
+```text
 ┌─────────────┐
-│   Trigger   │ (Daily 2 AM OR PR with .images.yaml changes)
+│   Trigger   │ (Schedule OR manual)
 └──────┬──────┘
        │
        ▼
 ┌─────────────────────┐
-│  Parse .images.yaml │ Extract all images + versions
-└──────┬──────────────┘
-       │
-       ▼
-┌─────────────────────┐
-│  Trivy Scan         │ For each image:
-│                     │ • Pull image
-│                     │ • Scan vulnerabilities
-│                     │ • Generate SARIF report
-└──────┬──────────────┘
-       │
-       ▼
-┌─────────────────────┐
-│  Upload Results     │ • GitHub Security tab
-│                     │ • Fail on CRITICAL/HIGH
-│                     │ • Create issue if threshold exceeded
+│  Parse & Scan       │ • Read .images.yaml
+│                     │ • Loop through images/versions
+│                     │ • Trivy scan each image
+│                     │ • Upload SARIF reports
+│                     │ • Check severity threshold
 └─────────────────────┘
 ```
 
-**Severity Handling:**
-- **CRITICAL**: Block release, create issue
-- **HIGH**: Block release, create issue
-- **MEDIUM**: Warn only
-- **LOW**: Informational
+**Configuration:**
 
-### 3. Image Replication
+```yaml
+jobs:
+  scan:
+    uses: chronolite-technologies/helm-workflows/.github/workflows/scan-images.yml@main
+    with:
+      images-config: .images.yaml      # Optional, default shown
+      severity: CRITICAL               # CRITICAL, HIGH, or MEDIUM
+```
+
+**Severity Handling:**
+- **CRITICAL**: Workflow fails, blocks release
+- **HIGH**: Workflow fails if configured
+- **MEDIUM**: Workflow fails if configured
+- **LOW**: Informational only
+
+### 3. Image Replication (`replicate-images.yml`)
 
 **Purpose:** Mirror public images to private registry for:
 - Air-gapped deployments
 - Rate limit avoidance
 - Supply chain security
-- Version control
+
+**Implementation:**
+- Single job with inline processing
+- No matrix strategy overhead
+- Uses `GITHUB_TOKEN` for authentication
+- Automatic prefix handling from config
 
 **Process:**
-```
+
+```text
 ┌─────────────┐
-│   Trigger   │ (Daily 3 AM OR .images.yaml changes)
+│   Trigger   │ (Schedule OR manual)
 └──────┬──────┘
        │
        ▼
 ┌─────────────────────┐
-│  Parse Config       │ Read .images.yaml
-└──────┬──────────────┘
-       │
-       ▼
-┌─────────────────────┐
-│  For Each Image     │ Matrix strategy
-└──────┬──────────────┘
-       │
-       ▼
-┌─────────────────────┐
-│  Pull → Tag → Push  │ source → target registry
-└──────┬──────────────┘
-       │
-       ▼
-┌─────────────────────┐
-│  Scan Replica       │ Trivy scan mirrored image
-└──────┬──────────────┘
-       │
-       ▼
-┌─────────────────────┐
-│  Update Metadata    │ Track version, scan date
+│  Parse & Replicate  │ • Read .images.yaml
+│                     │ • Loop through images/versions
+│                     │ • Pull from source
+│                     │ • Tag for target registry
+│                     │ • Push to target
 └─────────────────────┘
 ```
 
-### 4. Chart Publishing
+**Configuration:**
+
+```yaml
+jobs:
+  replicate:
+    uses: chronolite-technologies/helm-workflows/.github/workflows/replicate-images.yml@main
+    with:
+      images-config: .images.yaml            # Optional, default shown
+      target-org: your-org                   # Required
+      target-registry: ghcr.io               # Optional, default shown
+```
+
+### 4. Chart Publishing (`publish-chart.yml`)
 
 **Purpose:** Release charts to registries on version tags
 
+**Implementation:**
+- Single job combining package and publish
+- Uses `GITHUB_TOKEN` for registry authentication
+- Requires `PAT_TOKEN` only for main registry trigger
+- Automatic GitHub release creation
+
 **Process:**
-```
+
+```text
 ┌─────────────┐
 │  Git Tag    │ v1.2.3 pushed
 └──────┬──────┘
        │
        ▼
 ┌─────────────────────┐
-│  Package Chart      │ helm package charts/name
-└──────┬──────────────┘
-       │
-       ▼
-┌─────────────────────┐
-│  Push to GHCR       │ helm push oci://ghcr.io/...
+│  Package & Publish  │ • helm package
+│                     │ • Extract version
+│                     │ • Push to OCI registry
 └──────┬──────────────┘
        │
        ▼
@@ -231,68 +255,55 @@ chart-keycloak/
        │
        ▼
 ┌─────────────────────┐
-│  Main: Pull Chart   │ Download from GHCR
-│  Main: Update Index │ helm repo index
-│  Main: Deploy Pages │ Publish to GitHub Pages
+│  Create Release     │ GitHub release with chart archive
 └─────────────────────┘
+```
+
+**Configuration:**
+
+```yaml
+jobs:
+  publish:
+    uses: chronolite-technologies/helm-workflows/.github/workflows/publish-chart.yml@main
+    with:
+      chart-path: charts/chart-name         # Required
+      chart-name: chart-name                # Required
+      registry-org: your-org                # Required
+      main-registry-repo: your-org/helm-charts  # Required
+      oci-registry: ghcr.io                 # Optional, default shown
+    secrets:
+      pat-token: ${{ secrets.PAT_TOKEN }}   # Required for main registry trigger
 ```
 
 ## Image Configuration (`.images.yaml`)
 
-Centralized image tracking per chart:
+Simplified image tracking configuration:
 
 ```yaml
 registry:
-  source: quay.io
-  target: ghcr.io/chronolite-technologies
-  prefix: "mirrors"
+  prefix: "mirrors"  # Optional: prefix for target images
 
 images:
-  component-name:
-    source: quay.io/project/image
-    target: ghcr.io/chronolite-technologies/mirrors/image
+  keycloak:
+    source: quay.io/keycloak/keycloak
     versions:
-      - "1.2.3"
-      - "1.2.2"
-    scanPolicy: "daily"
-    autoUpdate: true
-
-scanning:
-  enabled: true
-  schedule: "0 2 * * *"
-  severity:
-    fail:
-      - CRITICAL
-      - HIGH
-    warn:
-      - MEDIUM
-  ignoredCVEs:
-    - CVE-2024-12345  # Reason: false positive
-
-dependencyBot:
-  enabled: true
-  schedule: "weekly"
-  autoMerge:
-    enabled: false
+      - "23.0"
+      - "24.0"
+  
+  postgres:
+    source: docker.io/library/postgres
+    versions:
+      - "16"
+      - "15"
 ```
 
-## Dependency Management
+**Notes:**
 
-### Dependabot Configuration
-
-Tracks multiple dependency types:
-
-```yaml
-updates:
-  - package-ecosystem: "github-actions"   # Workflow actions
-  - package-ecosystem: "docker"           # Container images
-  - package-ecosystem: "gitsubmodule"     # Upstream sources
-```
-
-**Auto-update Strategy:**
-- GitHub Actions: Weekly, auto-merge patch versions
-- Docker images: Weekly, manual review required
-- Submodules: Weekly, triggers sync workflow
+- The `source` field specifies the upstream image repository
+- The `versions` array lists all versions to scan/replicate
+- The optional `prefix` adds a namespace to target images (e.g., `ghcr.io/org/mirrors/keycloak`)
+- Scanning policy is controlled at workflow level via `severity` input
+- Configuration is simple and focused on essential tracking
 
 ## Security Model
 
@@ -303,80 +314,96 @@ updates:
    - Submodule updates reviewed via PR
 
 2. **Image Scanning**
-   - Daily Trivy scans on all images
+   - Scheduled Trivy scans on all images
    - Results uploaded to GitHub Security tab
-   - CI blocks on CRITICAL/HIGH vulnerabilities
+   - Configurable severity thresholds (CRITICAL, HIGH, MEDIUM)
 
 3. **Image Replication**
    - Pull from trusted upstream registries
-   - Scan before pushing to private registry
+   - Push to private registry for air-gap support
    - Version pinning in `.images.yaml`
 
 4. **Supply Chain**
-   - SBOM generation for all images
    - Provenance tracking via Git history
-   - Signed commits (optional)
+   - All changes reviewed via PR
+   - Automated workflows use `GITHUB_TOKEN` only
 
 ### Vulnerability Response
 
-```
+```text
 CVE Detected
+    │
+    ▼
+[Trivy Scan]
     │
     ▼
 [Severity Check]
     │
-    ├─ CRITICAL/HIGH
-    │   ├─ Block PR/Release
-    │   ├─ Create Issue
-    │   └─ Notify Team
+    ├─ Meets Threshold (CRITICAL/HIGH/MEDIUM)
+    │   ├─ Block Workflow
+    │   └─ Upload to Security Tab
     │
-    └─ MEDIUM/LOW
-        ├─ Log Warning
-        └─ Continue
+    └─ Below Threshold
+        └─ Continue (logged)
 ```
+
+### Required Secrets
+
+**Minimal secret configuration:**
+
+- `PAT_TOKEN` - Personal Access Token (only for `publish-chart.yml`)
+  - Scopes: `repo`, `write:packages`
+  - Used to trigger main registry updates via `repository_dispatch`
+
+**No longer required:**
+- ❌ ~~`SOURCE_USERNAME`/`SOURCE_PASSWORD`~~ - Removed (public registries)
+- ❌ ~~`REGISTRY_TOKEN`~~ - Use `GITHUB_TOKEN` instead
+- ❌ ~~Custom tokens~~ - Workflows use automatic token
 
 ## Automation Strategy
 
 ### Minimal Manual Intervention
 
 **Automated:**
-- Upstream sync checks (weekly)
-- Security scanning (daily)
-- Image replication (daily)
-- Dependency updates (weekly)
-- Chart publishing (on tag)
-- Registry index updates (on publish)
+
+- Upstream sync checks (scheduled or manual)
+- Security scanning (scheduled or manual)
+- Image replication (scheduled or manual)
+- Chart publishing (on tag push)
+- Registry index updates (via repository dispatch)
 
 **Manual Review Required:**
-- Upstream sync PRs (breaking changes)
-- Critical vulnerability fixes
-- Major version updates
+
+- Upstream sync PRs (review changes)
+- Severity threshold configuration
+- Version updates in `.images.yaml`
 - Chart configuration changes
 
 ## Integration Points
 
 ### Main Registry Triggers
 
-Chart repos → Main registry communication:
+Chart repos → Main registry communication via `repository_dispatch`:
 
 ```yaml
-# In chart repo publish workflow
-- name: Trigger main registry
+# In chart repo publish workflow (automatic via reusable workflow)
+- name: Trigger Main Registry Update
   uses: peter-evans/repository-dispatch@v3
   with:
-    token: ${{ secrets.PAT_TOKEN }}
-    repository: chronolite-technologies/helm-charts
+    token: ${{ secrets.pat-token }}
+    repository: ${{ inputs.main-registry-repo }}
     event-type: chart-published
     client-payload: |
       {
-        "chart": "keycloak",
-        "version": "v1.2.3",
-        "repository": "chart-keycloak"
+        "chart": "${{ inputs.chart-name }}",
+        "version": "${{ steps.publish.outputs.version }}",
+        "repository": "${{ github.repository }}",
+        "oci_url": "oci://${{ inputs.oci-registry }}/${{ inputs.registry-org }}/charts/${{ inputs.chart-name }}"
       }
 ```
 
 ```yaml
-# In main registry
+# In main registry repository
 on:
   repository_dispatch:
     types: [chart-published]
@@ -384,12 +411,42 @@ on:
 jobs:
   update:
     steps:
-      - name: Pull chart
+      - name: Pull chart from OCI registry
         run: |
-          helm pull oci://ghcr.io/${{ github.event.client_payload.repository }}
+          helm pull ${{ github.event.client_payload.oci_url }} \
+            --version ${{ github.event.client_payload.version }}
       
-      - name: Update index
-        run: helm repo index charts/
+      - name: Update repository index
+        run: helm repo index charts/ --url https://your-org.github.io/helm-charts
+      
+      - name: Commit and push
+        run: |
+          git add charts/ index.yaml
+          git commit -m "Add ${{ github.event.client_payload.chart }} ${{ github.event.client_payload.version }}"
+          git push
+```
+
+### Workflow Reference
+
+All chart repositories reference reusable workflows from `helm-workflows`:
+
+```yaml
+# Example: .github/workflows/publish.yml in chart repository
+name: Publish
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    uses: chronolite-technologies/helm-workflows/.github/workflows/publish-chart.yml@main
+    with:
+      chart-path: charts/keycloak
+      chart-name: keycloak
+      registry-org: chronolite-technologies
+      main-registry-repo: chronolite-technologies/helm-charts
+    secrets:
+      pat-token: ${{ secrets.PAT_TOKEN }}
 ```
 
 ## Best Practices
@@ -401,22 +458,38 @@ jobs:
 3. **Default to secure** - Minimal permissions, read-only filesystems
 4. **Resource limits** - Always define requests/limits
 
+### Workflow Configuration
+
+1. **Pin workflow versions** - Use `@v1.0.0` tags instead of `@main` for stability
+2. **Configure schedules appropriately** - Balance freshness vs. resource usage
+3. **Set severity thresholds** - Match your security requirements
+4. **Use descriptive chart names** - Follow conventions for discoverability
+
 ### Maintenance
 
 1. **Review sync PRs promptly** - Delays accumulate changes
 2. **Test in staging** - Never auto-merge to production
-3. **Document overrides** - When deviating from upstream
-4. **Version pinning** - Lock critical dependencies
+3. **Update `.images.yaml` regularly** - Track new versions
+4. **Monitor Security tab** - Address findings proactively
 
 ### Security
 
-1. **Scan early, scan often** - Don't wait for release
-2. **Mirror critical images** - Reduce external dependencies
-3. **Track CVEs** - Maintain ignored CVE list with justifications
-4. **Rotate credentials** - Registry tokens, PATs
+1. **Scan regularly** - Schedule daily or per-PR scans
+2. **Set appropriate thresholds** - Start with CRITICAL, add HIGH as needed
+3. **Review SARIF reports** - Use GitHub Security tab for tracking
+4. **Rotate PAT tokens** - Follow security best practices for PAT_TOKEN
+
+## Workflow Optimization
+
+The reusable workflows in `helm-workflows` are optimized for:
+
+- **Simplicity**: Single-job design, no matrix overhead
+- **Performance**: Inline processing, minimal steps
+- **Maintainability**: Clear configuration, sensible defaults
+- **Security**: Minimal secrets, automatic token usage
 
 ---
 
-**Document Version:** 1.0  
-**Last Review:** October 2025  
+**Document Version:** 2.0  
+**Last Review:** October 14, 2025  
 **Next Review:** January 2026
