@@ -1,0 +1,19 @@
+---
+name: Scan Container Images
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # Daily at 01:00 UTC
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.images.yaml'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  scan:
+    uses: chronolite-technologies/helm-workflows/.github/workflows/scan-images.yml@main
+    secrets: inherit

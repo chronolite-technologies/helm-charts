@@ -1,0 +1,13 @@
+# Container Images Configuration
+# See: https://github.com/chronolite-technologies/helm-workflows/blob/main/docs/images-config.md
+
+registry:
+  prefix: "charts"
+
+images:
+  # Example (remove after adding real images):
+  # nginx:
+  #   source: "docker.io/library/nginx"
+  #   versions:
+  #     - "1.27.3"
+  #     - "1.26.2"

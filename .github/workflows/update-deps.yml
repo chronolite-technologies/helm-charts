@@ -1,0 +1,17 @@
+---
+name: Update Container Images
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 02:00 UTC (1=Monday)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    uses: chronolite-technologies/helm-workflows/.github/workflows/update-images.yml@main
+    secrets:
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
