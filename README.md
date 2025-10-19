@@ -85,10 +85,12 @@ Edge-optimized Helm charts for privacy-first infrastructure deployments. Designe
 
 Charts are automatically published through CI/CD:
 
-1. Charts developed in individual repositories
+1. Charts developed in individual repositories (private)
 2. Release tags trigger automated packaging
 3. Published to GitHub Pages and GHCR
-4. Repository index automatically updated
+4. Repository index automatically updated by [helm-workflows](https://github.com/chronolite-technologies/helm-workflows)
+
+**Note:** This repository contains NO workflows. All automation logic is private and lives in the [helm-workflows](https://github.com/chronolite-technologies/helm-workflows) repository. This allows helm-charts to remain public while keeping workflow logic proprietary.
 
 ---
 
