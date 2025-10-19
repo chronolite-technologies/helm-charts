@@ -3,7 +3,29 @@ entries:
   keycloak:
   - apiVersion: v2
     appVersion: 26.1.0
-    created: "2025-10-18T22:22:39.961633501Z"
+    created: "2025-10-19T10:44:54.210734011Z"
+    description: Keycloak operator and instance deployment
+    digest: be73b27ad1a60ccbacba5ccb16ff0cfa77fc1a09c167997d0da7a5a7fd5bff4d
+    home: https://www.keycloak.org/
+    keywords:
+    - keycloak
+    - identity
+    - oauth
+    - sso
+    maintainers:
+    - email: emil.schilberg@chronolite.tech
+      name: Chronolite Technologies
+    name: keycloak
+    sources:
+    - https://github.com/keycloak/keycloak
+    - https://github.com/keycloak/keycloak-k8s-resources
+    type: application
+    urls:
+    - https://chronolite-technologies.github.io/helm-charts/keycloak-1.11.10.tgz
+    version: 1.11.10
+  - apiVersion: v2
+    appVersion: 26.1.0
+    created: "2025-10-19T10:44:54.212259856Z"
     description: Keycloak operator and instance deployment
     digest: e63ef086dfbb79869c314df05cdf71bca1efbcb1134fd979157edd7adab7420f
     home: https://www.keycloak.org/
@@ -23,4 +45,4 @@ entries:
     urls:
     - https://chronolite-technologies.github.io/helm-charts/keycloak-1.11.8.tgz
     version: 1.11.8
-generated: "2025-10-18T22:22:39.960311683Z"
+generated: "2025-10-19T10:44:54.208635968Z"
