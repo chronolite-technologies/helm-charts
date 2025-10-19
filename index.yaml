@@ -3,9 +3,9 @@ entries:
   keycloak:
   - apiVersion: v2
     appVersion: 26.4.0
-    created: "2025-10-19T22:13:44.223173263Z"
+    created: "2025-10-19T22:18:37.395857385Z"
     description: Keycloak operator and instance deployment
-    digest: 0f6fab11cde9bc7ac59cdc9653182188aa0445e41fdde7651d58b06719f5e0e2
+    digest: 141dd693180d68a3715b97fc2b1822c955d0ffc818d1d7285cf15ef3eeecdaae
     home: https://www.keycloak.org/
     keywords:
     - keycloak
@@ -25,7 +25,7 @@ entries:
     version: 1.12.6
   - apiVersion: v2
     appVersion: 26.4.0
-    created: "2025-10-19T22:13:44.22214338Z"
+    created: "2025-10-19T22:18:37.394780153Z"
     description: Keycloak operator and instance deployment
     digest: 9762f333a00c2546748be20a437fe4efaff6ddd030e8f78bf7d50206e4044b9f
     home: https://www.keycloak.org/
@@ -47,7 +47,7 @@ entries:
     version: 1.12.5
   - apiVersion: v2
     appVersion: 26.4.0
-    created: "2025-10-19T22:13:44.220716245Z"
+    created: "2025-10-19T22:18:37.392494943Z"
     description: Keycloak operator and instance deployment
     digest: a8fd2c9a5c0f9191a1e6d8ce732d929177dc66aa8df2785976d27210f95d945e
     home: https://www.keycloak.org/
@@ -69,7 +69,7 @@ entries:
     version: 1.12.4
   - apiVersion: v2
     appVersion: 26.4.0
-    created: "2025-10-19T22:13:44.218609994Z"
+    created: "2025-10-19T22:18:37.391477081Z"
     description: Keycloak operator and instance deployment
     digest: cb0514ef2065bb9c03f360ccecf3310c3de6f6656d57306dc9ba8daf8669b621
     home: https://www.keycloak.org/
@@ -91,7 +91,7 @@ entries:
     version: 1.12.3
   - apiVersion: v2
     appVersion: 26.4.0
-    created: "2025-10-19T22:13:44.217556917Z"
+    created: "2025-10-19T22:18:37.390419436Z"
     description: Keycloak operator and instance deployment
     digest: d7d0045e1727b64a79abd0c5d8f9857de3e909d5ffcc77227bc50468b6ecff80
     home: https://www.keycloak.org/
@@ -113,7 +113,7 @@ entries:
     version: 1.12.2
   - apiVersion: v2
     appVersion: 26.1.0
-    created: "2025-10-19T22:13:44.216574041Z"
+    created: "2025-10-19T22:18:37.389470503Z"
     description: Keycloak operator and instance deployment
     digest: b04d744bc58feeccb518f4d7a9ab8cd6bdeab309f10dcf0cc546429e76ddec9e
     home: https://www.keycloak.org/
@@ -135,7 +135,7 @@ entries:
     version: 1.12.1
   - apiVersion: v2
     appVersion: 26.1.0
-    created: "2025-10-19T22:13:44.21410659Z"
+    created: "2025-10-19T22:18:37.387732035Z"
     description: Keycloak operator and instance deployment
     digest: eca32f52f3be8b6c5260897cfa2656d155bf05be56d2023d0e2bb90db21e0df2
     home: https://www.keycloak.org/
@@ -157,7 +157,7 @@ entries:
     version: 1.12.0
   - apiVersion: v2
     appVersion: 26.1.0
-    created: "2025-10-19T22:13:44.211999865Z"
+    created: "2025-10-19T22:18:37.38508549Z"
     description: Keycloak operator and instance deployment
     digest: b93197f9e8bde66401d20f9d124cfc4cb2fbe25f4db9954ac3adc3419580a0ca
     home: https://www.keycloak.org/
@@ -179,7 +179,7 @@ entries:
     version: 1.11.11
   - apiVersion: v2
     appVersion: 26.1.0
-    created: "2025-10-19T22:13:44.199004694Z"
+    created: "2025-10-19T22:18:37.383837278Z"
     description: Keycloak operator and instance deployment
     digest: be73b27ad1a60ccbacba5ccb16ff0cfa77fc1a09c167997d0da7a5a7fd5bff4d
     home: https://www.keycloak.org/
@@ -201,7 +201,7 @@ entries:
     version: 1.11.10
   - apiVersion: v2
     appVersion: 26.1.0
-    created: "2025-10-19T22:13:44.213069633Z"
+    created: "2025-10-19T22:18:37.386084336Z"
     description: Keycloak operator and instance deployment
     digest: e63ef086dfbb79869c314df05cdf71bca1efbcb1134fd979157edd7adab7420f
     home: https://www.keycloak.org/
@@ -221,4 +221,4 @@ entries:
     urls:
     - https://chronolite-technologies.github.io/helm-charts/keycloak-1.11.8.tgz
     version: 1.11.8
-generated: "2025-10-19T22:13:44.197837754Z"
+generated: "2025-10-19T22:18:37.381497937Z"
